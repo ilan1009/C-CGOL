@@ -1,0 +1,10 @@
+# Ignore the build directory
+build/
+
+# Ignore all loose files in the main directory except .gitignore and Makefile
+/*
+!.gitignore
+!/src/
+!/rles/
+!/include/
+!Makefile
