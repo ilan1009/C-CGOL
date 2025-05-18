@@ -5,8 +5,8 @@
 #include "uthash.h"
 
 typedef struct {
-    Coordinate coord;  // Key
-    UT_hash_handle hh; // Required hash handle
+    Coordinate coord;  
+    UT_hash_handle hh; 
 } CoordinateSetEntry;
 
 #endif

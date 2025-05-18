@@ -1,7 +1,7 @@
-// src/render.c
 #include "render.h"
 #include "shader_loader.h"
 #include "linmath.h"
+#include "window.h"
 #include <glad/glad.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,6 +16,7 @@ void render_init(Renderer* renderer, float cell_size) {
         fprintf(stderr, "Failed to initialize GLAD\n");
         exit(EXIT_FAILURE);
     }
+
     // Initialize shader
     printf("initialising shader...\n");
     renderer->shader = create_shader_program(
@@ -32,14 +33,15 @@ void render_init(Renderer* renderer, float cell_size) {
 
     glBindVertexArray(renderer->vao);
 
-    // Quad VBO
+    // Static quad VBO
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-    // Instance VBO (init with NULL)
+    // Instance VBO: preallocate with NULL
     glBindBuffer(GL_ARRAY_BUFFER, renderer->instance_vbo);
+    glBufferData(GL_ARRAY_BUFFER, GRID_WIDTH * GRID_HEIGHT * 2 * sizeof(int), NULL, GL_STREAM_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 2, GL_INT, 2 * sizeof(int), (void*)0);
     glVertexAttribDivisor(1, 1);
@@ -49,7 +51,7 @@ void render_init(Renderer* renderer, float cell_size) {
 
 void render_resize(Renderer* renderer, int width, int height) {
     mat4x4 ortho;
-    mat4x4_ortho(ortho, 0, width, height, 0, -1, 1); // Note: height and 0 are swapped
+    mat4x4_ortho(ortho, 0, width, height, 0, -1, 1); // Y-flip
     memcpy(renderer->projection, ortho, sizeof(ortho));
 }
 
@@ -66,9 +68,9 @@ void render_grid(Renderer* renderer, CoordinateSetEntry* alive_cells) {
         cells[i++] = c->coord.y;
     }
 
-    // Update instance buffer
+    // Update instance buffer (reuse allocation)
     glBindBuffer(GL_ARRAY_BUFFER, renderer->instance_vbo);
-    glBufferData(GL_ARRAY_BUFFER, count * 2 * sizeof(int), cells, GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, count * 2 * sizeof(int), cells);
     free(cells);
 
     // Draw

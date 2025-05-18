@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c23 -Iinclude -Iinclude/glad -O3 -march=native -flto -funroll-loops -MMD -MP
+CFLAGS = -Wall -Wextra -std=c23 -Iinclude -Iinclude/glad -O3 -march=native -flto -funroll-loops -MMD -MP
 LDFLAGS = -lglfw -lGL -lm -ldl
 
 # Source files

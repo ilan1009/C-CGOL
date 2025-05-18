@@ -1,3 +1,4 @@
+//engine.h
 #ifndef ENGINE_H
 #define ENGINE_H
 
@@ -14,10 +15,6 @@
 #define FATE_DEATH -1
 #define FATE_BIRTH 1
 
-#define POOL_SIZE 10000
-extern size_t pool_index;
-
-
 extern CoordinateSetEntry* alive_cells;
 
 void engine_init(int width, int height);
@@ -26,23 +23,31 @@ void engine_cleanup(void);
 void birth_cell(Coordinate pos);
 void kill_cell(Coordinate pos);
 
-static inline bool get_cell_state(Coordinate pos) {
-    CoordinateSetEntry* found;
-    HASH_FIND(hh, alive_cells, &pos, sizeof(Coordinate), found);
-    return found != NULL;
-}
-int count_alive_neighbors(Coordinate pos);
 
 // decide if cell is fated to be birthed, die, or stay the same in the next generation
-int decide_cell_fate(Coordinate pos);
+static inline int decide_fate(int neighbors, bool alive) {
+    return (alive && (neighbors < 2 || neighbors > 3)) ? FATE_DEATH :
+          (!alive && neighbors == 3) ? FATE_BIRTH : FATE_STAY;
+}
 
 // add a coordinate to the candidates set
-static inline void add_candidate(CoordinateSetEntry** candidates, Coordinate coord);
+static inline void add_to_coordinate_set(CoordinateSetEntry** candidates, Coordinate coord) {
+    CoordinateSetEntry* new_cell = malloc(sizeof(CoordinateSetEntry));
+    if (new_cell) {
+        new_cell->coord = coord;
+        HASH_ADD(hh, *candidates, coord, sizeof(Coordinate), new_cell);
+    }
+}
 
-// add alive cells and their neighbors to candidates set
-void add_cell_and_neighbors(CoordinateSetEntry** candidates, Coordinate cell, int width, int height);
 
-static inline void free_coordinate_set(CoordinateSetEntry** set);
+static inline void free_coordinate_set(CoordinateSetEntry** set) {
+    CoordinateSetEntry *entry, *tmp;
+    HASH_ITER(hh, *set, entry, tmp) {
+        HASH_DEL(*set, entry);
+        free(entry);
+    }
+    *set = NULL; // nullify pointer after cleanup
+}
 
 void engine_step(void); // advance the game by one generation
 
