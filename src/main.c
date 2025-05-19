@@ -10,9 +10,6 @@
 
 extern CoordinateSetEntry* alive_cells;
 
-double now;
-double last_speed_adjust_time;
-
 int main(void) {
     printf("program started\n");
     setbuf(stdout, NULL);
@@ -30,14 +27,14 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT);
     render_grid(&renderer, alive_cells);
     glfwSwapBuffers(window);
+    
+    init_game(window, &renderer);
 
-    now = glfwGetTime();
-    last_speed_adjust_time = 0;
-
-    game_loop(window, &renderer);
+    game_loop();
 
     glfwDestroyWindow(window);
     glfwTerminate();
+    
     return 0;
 }
 

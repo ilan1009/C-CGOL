@@ -13,8 +13,13 @@
 #include "tinyfiledialogs.h"
 
 
+
 static double now;
 static double last_speed_adjust_time = 0;
+
+Userstate user_state;
+Gamestate game_state;
+Renderstate render_state;
 
 
 void load_rle(const char* filename, int start_x, int start_y) {
@@ -76,74 +81,96 @@ void load_rle(const char* filename, int start_x, int start_y) {
     fclose(file);
 }
 
-// black magic
-double get_speed_delay(int speed) {
+// black magic if it was bad
+double get_speed_delay() {
+    int speed = user_state.speed; 
+
     if (speed <= 0) return 1.0;
     if (speed >= 100) return 0.0;
-    
+
     if (speed <= 80) {
-        double factor = (double)(80 - speed) / 80.0;
-        return 1.0 * pow(factor, 1.5) + 0.01;
+        double factor = (80.0 - speed) / 80.0;
+        return pow(factor, 1.5) + 0.01;
     } else {
-        double factor = (double)(99 - speed) / 19.0;
+        double factor = (99.0 - speed) / 19.0;
         return 0.01 * factor + 0.001;
     }
 }
 
-void update_dashboard(int speed, int generations_per_second, int generation){
-    printf(DASH_TEMPLATE, speed, generations_per_second, generation);
+#define DASH_TEMPLATE "\033[H\033[J"\
+                        "Speed: %-3d\n"\
+                        "Generations / s: %dHz\n"\
+                        "Generation: %-6d\n"\
+                        
+void update_dashboard(){
+    printf(DASH_TEMPLATE, user_state.speed, render_state.generations_per_second, game_state.generation_count);
+    printf("%s | %s\n", user_state.fast_forward ? "FAST FORWARD" : (user_state.paused ? "   PAUSED   " : " SIMULATING "), user_state.vsync ? "VSYNC" : "     ");
 }
 
 
-bool handle_input(GLFWwindow *window, int *speed, bool *vsync, double *delay, bool *paused, bool *load_requested) {
+bool handle_input() {
     static bool prev_space = false;
     static bool prev_l = false;
+    static bool prev_v = false;
+    static bool prev_r = false;
 
     bool updated = false;
 
-    bool space = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-    bool up = glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS;
-    bool down = glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
-    bool l = glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS;
+    bool space = glfwGetKey(render_state.window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    bool up = glfwGetKey(render_state.window, GLFW_KEY_UP) == GLFW_PRESS;
+    bool down = glfwGetKey(render_state.window, GLFW_KEY_DOWN) == GLFW_PRESS;
+    bool l = glfwGetKey(render_state.window, GLFW_KEY_L) == GLFW_PRESS;
+    bool tab = glfwGetKey(render_state.window, GLFW_KEY_TAB) == GLFW_PRESS;
+    bool v = glfwGetKey(render_state.window, GLFW_KEY_V) == GLFW_PRESS;
+    bool r = glfwGetKey(render_state.window, GLFW_KEY_R) == GLFW_PRESS;
 
     // pause toggle
     if (space && !prev_space) {
-        *paused = !*paused;
+        user_state.paused = !user_state.paused;
         updated = true;
     }
     prev_space = space;
 
     //load
     if (l && !prev_l) {
-        *load_requested = true;
+        user_state.load_requested = true;
     }
     prev_l = l;
 
+    //reset simulation
+    if (r && !prev_r) {
+        user_state.reset_requested = true;
+    }
+    prev_r = r;
+
     //speed
-    if (up && *speed < MAX_SPEED && now - last_speed_adjust_time > 0.1) {
-        (*speed) += 1; 
+    if (up && user_state.speed < MAX_SPEED && now - last_speed_adjust_time > 0.1) {
+        user_state.speed += 1; 
         updated = true;
         last_speed_adjust_time = now; 
-    } else if (down && *speed > MIN_SPEED && now - last_speed_adjust_time > 0.1) {
-        (*speed) -= 1; 
+        game_state.delay = get_speed_delay();
+    } else if (down && user_state.speed > MIN_SPEED && now - last_speed_adjust_time > 0.1) {
+        user_state.speed -= 1; 
         updated = true;
         last_speed_adjust_time = now; 
-    }
+        game_state.delay = get_speed_delay();
+    }  
 
-    // vsync 
-    if (*speed > 80 && *vsync) {
-        glfwSwapInterval(0); // Disable VSync
-        *vsync = false;
-    } else if (*speed <= 80 && !*vsync) {
-        glfwSwapInterval(1); // Enable VSync
-        *vsync = true;
+    // vsync
+    if (user_state.fast_forward && user_state.vsync){
+        updated = true;
+        user_state.vsync = false;
+        glfwSwapInterval(0);
     }
-
-    // Recompute delay
-    if (updated) {
-        *delay = (*speed == MAX_SPEED) ? 0.0 : get_speed_delay(*speed);
+    if (v && !prev_v) {
+        user_state.vsync = !user_state.vsync;
+        glfwSwapInterval(user_state.vsync ? 1 : 0);
+        updated = true;
     }
+    prev_v = v;
 
+    user_state.fast_forward = tab;
+    
     return updated;
 }
 
@@ -158,69 +185,100 @@ void load_rle_dialog(void) {
     load_rle(path, x, y);
 }
 
+void init_game(GLFWwindow* window, Renderer* renderer){
+    render_state.window = window;
+    render_state.renderer = renderer;
+    render_state.generations_per_second = 0;
+    render_state.generations_last_second = 0;
 
-void game_loop(GLFWwindow *window, Renderer *renderer) {
-    int speed = 50;
-    bool vsync = true;
-    double delay = (speed == MAX_SPEED) ? 0.0 : get_speed_delay(speed);
-    double last_step_time = glfwGetTime();
-    int generation_count = 0;
+    user_state.speed = 50;
+    user_state.vsync = true;
 
-    double previous_time = last_step_time;
-    int generations_per_second = 0;
-    int generations_last_second = 0;
+    user_state.paused = true;
+    user_state.fast_forward = false;
+    user_state.load_requested = false;
+    user_state.reset_requested = false;
 
-    update_dashboard(0, 0, 0);
+    game_state.delay = get_speed_delay(user_state.speed);
 
-    bool paused = true;
-    bool load_requested = false;
+    game_state.last_step_time = glfwGetTime();
+    game_state.generation_count = 0;
+    game_state.previous_time = glfwGetTime();   
+}
 
-    while (!glfwWindowShouldClose(window)) {
+void game_loop() {
+    update_dashboard();
+
+    while (!glfwWindowShouldClose(render_state.window)) {
         glfwPollEvents();
 
         now = glfwGetTime();
         bool did_step = false;
 
         // Update per-second generation counter
-        if (now - previous_time > 1.0) {
-            generations_per_second = generations_last_second;
-            generations_last_second = 0;
-            previous_time = now;
-            update_dashboard(speed, generations_per_second, generation_count);
+        if (now - game_state.previous_time > 1.0) {
+            render_state.generations_per_second = render_state.generations_last_second;
+            render_state.generations_last_second = 0;
+            game_state.previous_time = now;
+            update_dashboard();
         }
 
-        if (handle_input(window, &speed, &vsync, &delay, &paused, &load_requested)) {
-            update_dashboard(speed, generations_per_second, generation_count);
+        if (handle_input()) {
+            update_dashboard();
         }
 
-        if (load_requested) {
+        if (user_state.load_requested) {
             load_rle_dialog();
-            load_requested = false;
+            user_state.load_requested = false;
+        }
+
+        if (user_state.reset_requested) {
+            reset_game();
+            return;
         }
 
         // simulating
-        if (!paused && (speed == MAX_SPEED || now - last_step_time >= delay)) {
+        if (user_state.fast_forward || (!user_state.paused &&  (now - game_state.last_step_time >= game_state.delay))) {
             engine_step();
-            ++generation_count;
-            ++generations_last_second;
-            last_step_time = now;
+            ++game_state.generation_count;
+            ++render_state.generations_last_second;
+            game_state.last_step_time = now;
             did_step = true;
-            if (speed != MAX_SPEED) {
-                update_dashboard(speed, generations_per_second, generation_count);
+            if (!user_state.fast_forward) {
+                update_dashboard();
             }
         }
 
         // rendering
 
         glClear(GL_COLOR_BUFFER_BIT);
-        render_grid(renderer, alive_cells);
-        glfwSwapBuffers(window);
+        render_grid(render_state.renderer, alive_cells);
+        glfwSwapBuffers(render_state.window);
 
         //throttle_loop(delay, speed, did_step);
     }
 }
 
+void reset_game(){
+    game_state.generation_count = 0;
 
+    game_state.last_step_time = glfwGetTime();
+    game_state.previous_time = glfwGetTime();   
+
+
+    render_state.generations_per_second = 0;
+    render_state.generations_last_second = 0;
+
+    user_state.paused = true;
+    user_state.fast_forward = false;
+    user_state.load_requested = false;
+    user_state.reset_requested = false;
+
+    engine_cleanup();
+    engine_init(GRID_WIDTH, GRID_HEIGHT);
+
+    game_loop();
+}
 void throttle_loop(double delay, int speed, bool did_step) {
     if (speed != MAX_SPEED && !did_step) {
         glfwWaitEventsTimeout(delay);
