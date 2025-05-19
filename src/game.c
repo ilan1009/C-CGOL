@@ -91,8 +91,7 @@ double get_speed_delay(int speed) {
 }
 
 void update_dashboard(int speed, int generations_per_second, int generation){
-    printf(DASH_TEMPLATE, speed, generations_per_second, 
-        generation);
+    printf(DASH_TEMPLATE, speed, generations_per_second, generation);
 }
 
 
