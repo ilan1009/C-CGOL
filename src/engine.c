@@ -84,7 +84,8 @@ static NeighborCount* build_neighbor_counts(void) {
                 entry->count++;
             } else {
                 entry = malloc(sizeof(NeighborCount));
-                *entry = (NeighborCount){nb, 1};
+                *entry = (NeighborCount){ .coord = nb, .count = 1 };
+
                 HASH_ADD(hh, counts, coord, sizeof(Coordinate), entry);
             }
         }

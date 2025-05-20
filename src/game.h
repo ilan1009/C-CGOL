@@ -47,6 +47,15 @@ typedef struct
 } Renderstate;
 
 
+typedef struct{
+    const char* msg_content;
+    double msg_start_time;
+} Message;
+
+#define MAX_MESSAGES 10
+
+void init_message(char* msg_content);
+void handle_messages();
 
 void load_rle(const char* filename, int start_x, int start_y);
 double get_speed_delay();
@@ -56,6 +65,7 @@ void init_game(GLFWwindow* window, Renderer* renderer);
 
 void game_loop();
 void throttle_loop(double delay, int speed, bool did_step);
+void reset_game();
 bool handle_input();
 
 

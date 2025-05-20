@@ -17,39 +17,43 @@
 static double now;
 static double last_speed_adjust_time = 0;
 
+
+Message messages[MAX_MESSAGES];
+static int bottom_message_index = 0;
+
 Userstate user_state;
 Gamestate game_state;
 Renderstate render_state;
 
 
-void load_rle(const char* filename, int start_x, int start_y) {
-    FILE* file = fopen(filename, "r");
+void load_rle(const char* path, int start_x, int start_y) {
+    FILE* file = fopen(path, "r");
     if (!file) {
-        perror("Failed to open RLE file");
+        init_message("failed to load rle");
         return;
     }
+    int x = 0, y = 0;
 
     char line[1024];
-    int x = 0, y = 0;
     bool rle_started = false;
 
     while (fgets(line, sizeof(line), file)) {
         // skip comments
         if (line[0] == '#') continue;
 
-        // skip header
+        // process header
         if (!rle_started) {
+            // example:
+            // x = 3, y = 3, rule = B3/S23
             if (strstr(line, "x") && strstr(line, "y")) {
                 rle_started = true;  // Next lines will be RLE data
             }
             continue;
         }
-        if (start_x < 0 || start_x+x > GRID_WIDTH || start_y<0 || start_y+y > GRID_HEIGHT) return;
 
-        // Parse RLE data
+
         const char* p = line;
         int run_count = 0;
-
         while (*p) {
             if (isdigit(*p)) {
                 run_count = run_count * 10 + (*p - '0');
@@ -72,11 +76,15 @@ void load_rle(const char* filename, int start_x, int start_y) {
                 run_count = 0;
             } else if (*p == '!') {
                 fclose(file);
+                init_message("loaded rle");
+
                 return;
+                
             }
             p++;
         }
     }
+
 
     fclose(file);
 }
@@ -97,14 +105,37 @@ double get_speed_delay() {
     }
 }
 
-#define DASH_TEMPLATE "\033[H\033[J"\
-                        "Speed: %-3d\n"\
+void init_message(char* msg_content){
+    if (bottom_message_index >= MAX_MESSAGES) {
+        bottom_message_index = 0;
+    }
+    Message *message = &messages[bottom_message_index];
+    message->msg_content = msg_content; // allocates and copies
+    message->msg_start_time = glfwGetTime();
+    bottom_message_index++;
+}
+
+void handle_messages(){
+    for (int i = 0; i < MAX_MESSAGES; ++i){
+        if (messages[i].msg_content == NULL) continue;
+
+        if (now - messages[i].msg_start_time > 2.0) {
+            messages[i].msg_content = NULL;
+        }
+        else {
+            printf("%s\n", messages[i].msg_content);
+        }
+    }
+}
+#define DASH_TEMPLATE "Speed: %-3d\n"\
                         "Generations / s: %dHz\n"\
                         "Generation: %-6d\n"\
                         
-void update_dashboard(){
+void update_dashboard(){   
+    printf("\033[H\033[J"); 
     printf(DASH_TEMPLATE, user_state.speed, render_state.generations_per_second, game_state.generation_count);
     printf("%s | %s\n", user_state.fast_forward ? "FAST FORWARD" : (user_state.paused ? "   PAUSED   " : " SIMULATING "), user_state.vsync ? "VSYNC" : "     ");
+    handle_messages();
 }
 
 
@@ -213,7 +244,6 @@ void game_loop() {
         glfwPollEvents();
 
         now = glfwGetTime();
-        bool did_step = false;
 
         // Update per-second generation counter
         if (now - game_state.previous_time > 1.0) {
@@ -230,6 +260,7 @@ void game_loop() {
         if (user_state.load_requested) {
             load_rle_dialog();
             user_state.load_requested = false;
+            update_dashboard();
         }
 
         if (user_state.reset_requested) {
@@ -243,7 +274,6 @@ void game_loop() {
             ++game_state.generation_count;
             ++render_state.generations_last_second;
             game_state.last_step_time = now;
-            did_step = true;
             if (!user_state.fast_forward) {
                 update_dashboard();
             }
@@ -277,6 +307,7 @@ void reset_game(){
     engine_cleanup();
     engine_init(GRID_WIDTH, GRID_HEIGHT);
 
+    init_message("game reset");
     game_loop();
 }
 void throttle_loop(double delay, int speed, bool did_step) {
