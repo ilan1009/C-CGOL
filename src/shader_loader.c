@@ -44,7 +44,7 @@ GLuint compile_shader(const char* path, GLenum type) {
 
     free(source);
 
-    // Check compilation status
+    // check compilation status
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
@@ -76,11 +76,11 @@ GLuint create_shader_program(const char* vert_path, const char* frag_path) {
     glAttachShader(program, frag_shader);
     glLinkProgram(program);
 
-    // Cleanup shaders
+    // cleanup shaders
     glDeleteShader(vert_shader);
     glDeleteShader(frag_shader);
 
-    // Check linking status
+    // check linking status
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {

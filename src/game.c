@@ -46,7 +46,7 @@ void load_rle(const char* path, int start_x, int start_y) {
             // example:
             // x = 3, y = 3, rule = B3/S23
             if (strstr(line, "x") && strstr(line, "y")) {
-                rle_started = true;  // Next lines will be RLE data
+                rle_started = true;  // next lines will be RLE data
             }
             continue;
         }
@@ -245,7 +245,7 @@ void game_loop() {
 
         now = glfwGetTime();
 
-        // Update per-second generation counter
+        // update gen/s
         if (now - game_state.previous_time > 1.0) {
             render_state.generations_per_second = render_state.generations_last_second;
             render_state.generations_last_second = 0;

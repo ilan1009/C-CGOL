@@ -13,7 +13,7 @@ void render_init(Renderer* renderer, float cell_size) {
     }
 
 
-    // Initialize shader
+    // initialize shader
     printf("initialising shader...\n");
     renderer->shader = create_shader_program(
         "src/shaders/grid.vert",
@@ -26,21 +26,19 @@ void render_init(Renderer* renderer, float cell_size) {
     renderer->cells_capacity = 0;
 
 
-    // Initialize VAO/VBO
+    // initialize VAO and VBO
     glGenVertexArrays(1, &renderer->vao);
     glGenBuffers(1, &renderer->instance_vbo);
     glBindVertexArray(renderer->vao);
     
-    // Only instance VBO needed for point coordinates
     glBindBuffer(GL_ARRAY_BUFFER, renderer->instance_vbo);
     glBufferData(GL_ARRAY_BUFFER, GRID_WIDTH * GRID_HEIGHT * 2 * sizeof(int), NULL, GL_STREAM_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribIPointer(0, 2, GL_INT, 2 * sizeof(int), (void*)0);
     
-    // No attribute divisor needed for points
     glBindVertexArray(0);
     
-    // Enable point sprites
+    // point sprites
     glEnable(GL_PROGRAM_POINT_SIZE);
 }
 
@@ -51,11 +49,11 @@ void render_resize(Renderer* renderer, int width, int height) {
 }
 
 void render_grid(Renderer* renderer, CoordinateSetEntry* alive_cells) {
-    // Count cells
+    // count cells
     int count = 0;
     for (CoordinateSetEntry* c = alive_cells; c; c = c->hh.next) count++;
 
-    // Resize buffer if needed
+    // resize buffer
     if (count > renderer->cells_capacity) {
         free(renderer->cells);  // only if it exists
         renderer->cells = malloc(count * 2 * sizeof(int));
@@ -69,11 +67,11 @@ void render_grid(Renderer* renderer, CoordinateSetEntry* alive_cells) {
         cells[i++] = c->coord.y;
     }
 
-    // Update GPU buffer
+    // update GPU buffer
     glBindBuffer(GL_ARRAY_BUFFER, renderer->instance_vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, count * 2 * sizeof(int), cells);
 
-    // Draw
+    // draw
     glUseProgram(renderer->shader);
     glUniformMatrix4fv(
         glGetUniformLocation(renderer->shader, "uProjection"),

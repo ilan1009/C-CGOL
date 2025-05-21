@@ -106,8 +106,14 @@ void engine_step(void) {
     HASH_ITER(hh, alive_cells, cell, tmp) {
         NeighborCount* nc;
         HASH_FIND(hh, neighbor_counts, &cell->coord, sizeof(Coordinate), nc);
-        int fate = decide_fate(nc ? nc->count : 0, true); // neighbor count is simply if found nc-count else 0..
-        // honestly, if no neighbors could just insta kill it by underpopulation
+        int fate;
+        if (nc) {
+            fate = decide_fate(nc->count, true);
+        }
+        else {
+            fate = FATE_DEATH;
+        }
+
         if (fate == FATE_DEATH) add_to_coordinate_set(&to_kill, cell->coord);
     }
 

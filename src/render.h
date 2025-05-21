@@ -7,7 +7,7 @@
 typedef struct {
     unsigned int vao, vbo, instance_vbo, shader;
     float cell_size;
-    float projection[16]; // Column-major 4x4 matrix
+    float projection[16]; // 4x4 matrix
 
     int* cells;
     int cells_capacity;
