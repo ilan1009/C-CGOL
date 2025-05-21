@@ -1,0 +1,36 @@
+# windows makefile for mingw
+CC = gcc
+CFLAGS = -Wall -Wextra -Iinclude -Iinclude/glad -O2 -march=native -flto -funroll-loops -MMD -MP
+LDFLAGS = -Llib/lib-mingw-w64 -lglfw3 -lopengl32 -lgdi32 -luser32 -lkernel32 -lole32 -lcomdlg32
+
+# output exe
+BIN = build/my_project.exe
+
+# src
+SRC := $(wildcard src/*.c) src/glad/glad.c
+OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
+DEP := $(OBJ:.o=.d)
+
+# shaders
+SHADER_DIR := build/shaders
+SHADERS := $(wildcard src/shaders/*.vert src/shaders/*.frag)
+SHADER_TARGETS := $(patsubst src/shaders/%,$(SHADER_DIR)/%,$(SHADERS))
+
+$(BIN): $(OBJ) $(SHADER_TARGETS)
+	$(CC) $(OBJ) -o $@ $(LDFLAGS)
+
+build/%.o: src/%.c
+	if not exist "$(subst /,\,$(@D))" mkdir $(subst /,\,$(@D))
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# copy shaders to build dir
+$(SHADER_DIR)/%: src/shaders/%
+	if not exist "$(subst /,\,$(@D))" mkdir $(subst /,\,$(@D))
+	copy /Y "$(subst /,\,$<)" "$(subst /,\,$@)"
+
+clean:
+	@if exist build rmdir /S /Q build
+
+-include $(DEP)
+
+.PHONY: clean

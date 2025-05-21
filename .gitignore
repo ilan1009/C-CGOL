@@ -8,3 +8,4 @@ build/
 !/rles/
 !/include/
 !Makefile
+!Makefile_win
