@@ -68,5 +68,7 @@ void throttle_loop(double delay, int speed, bool did_step);
 void reset_game();
 bool handle_input();
 
+void reset_game();
+
 
 #endif

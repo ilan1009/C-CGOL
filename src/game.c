@@ -200,7 +200,10 @@ bool handle_input() {
     }
     prev_v = v;
 
-    user_state.fast_forward = tab;
+    if (user_state.fast_forward != tab){
+       user_state.fast_forward = tab;
+        updated = true;
+    }
     
     return updated;
 }
@@ -230,7 +233,7 @@ void init_game(GLFWwindow* window, Renderer* renderer){
     user_state.load_requested = false;
     user_state.reset_requested = false;
 
-    game_state.delay = get_speed_delay(user_state.speed);
+    game_state.delay = get_speed_delay();
 
     game_state.last_step_time = glfwGetTime();
     game_state.generation_count = 0;
