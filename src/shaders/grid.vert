@@ -7,5 +7,5 @@ uniform float uCellSize;
 void main() {
     vec2 position = vec2(aPos) * uCellSize;
     gl_Position = uProjection * vec4(position, 0.0, 1.0);
-    gl_PointSize = uCellSize; // Set point size to cell size
+    gl_PointSize = uCellSize;
 }
