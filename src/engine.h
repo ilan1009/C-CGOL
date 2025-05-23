@@ -24,18 +24,18 @@ void birth_cell(Coordinate pos);
 void kill_cell(Coordinate pos);
 
 
-// decide if cell is fated to be birthed, die, or stay the same in the next generation
-static inline int decide_fate(int neighbors, bool alive) {
-    return (alive && (neighbors < 2 || neighbors > 3)) ? FATE_DEATH :
-          (!alive && neighbors == 3) ? FATE_BIRTH : FATE_STAY;
-}
-
 // add a coordinate to the candidates set
 static inline void add_to_coordinate_set(CoordinateSetEntry** candidates, Coordinate coord) {
-    CoordinateSetEntry* new_cell = malloc(sizeof(CoordinateSetEntry));
-    if (new_cell) {
-        new_cell->coord = coord;
-        HASH_ADD(hh, *candidates, coord, sizeof(Coordinate), new_cell);
+    CoordinateSetEntry* existing_entry;
+    
+    HASH_FIND(hh, *candidates, &coord, sizeof(Coordinate), existing_entry);
+    
+    if (!existing_entry) {
+        CoordinateSetEntry* new_cell = malloc(sizeof(CoordinateSetEntry));
+        if (new_cell) {
+            new_cell->coord = coord;
+            HASH_ADD(hh, *candidates, coord, sizeof(Coordinate), new_cell);
+        }
     }
 }
 
