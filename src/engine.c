@@ -49,7 +49,6 @@ void engine_cleanup(void) {
     candidates = NULL;
 }
 
-// Proper coordinate wrapping that handles all cases
 static inline void wrap_coordinate_inplace(int* x, int* y) {
     *x = ((*x % grid_width) + grid_width) % grid_width;
     *y = ((*y % grid_height) + grid_height) % grid_height;

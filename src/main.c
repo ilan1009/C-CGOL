@@ -21,7 +21,13 @@ int main(void) {
 
     Renderer renderer;
     render_init(&renderer, CELL_SIZE);
-    render_resize(&renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    // Query the framebuffer size
+    int framebuffer_width, framebuffer_height;
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+
+    // Resize the renderer to match the framebuffer size
+    render_resize(&renderer, framebuffer_width, framebuffer_height);
     printf("Renderer initialised\n");
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -34,7 +40,7 @@ int main(void) {
 
     glfwDestroyWindow(window);
     glfwTerminate();
-    
+
     return 0;
 }
 

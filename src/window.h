@@ -1,10 +1,9 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#define WINDOW_WIDTH 1024
-
-#define GRID_WIDTH 1024
-#define GRID_HEIGHT 1024
+#define GRID_WIDTH 800
+#define GRID_HEIGHT 800
+#define WINDOW_WIDTH 800
 
 extern const int CELL_SIZE;
 

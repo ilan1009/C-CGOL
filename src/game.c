@@ -4,7 +4,6 @@
 #include "engine.h"
 #include "window.h"
 #include "render.h"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -12,11 +11,8 @@
 #include <GLFW/glfw3.h>
 #include "tinyfiledialogs.h"
 
-
-
 static double now;
 static double last_speed_adjust_time = 0;
-
 
 Message messages[MAX_MESSAGES];
 static int bottom_message_index = 0;
@@ -24,7 +20,6 @@ static int bottom_message_index = 0;
 Userstate user_state;
 Gamestate game_state;
 Renderstate render_state;
-
 
 void load_rle(const char* path, int start_x, int start_y) {
     FILE* file = fopen(path, "r");
