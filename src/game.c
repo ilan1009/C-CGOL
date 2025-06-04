@@ -1,3 +1,4 @@
+// game.c
 #include "game.h"
 #include "coordinate.h"
 #include "coordinate_set.h"
@@ -9,7 +10,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <GLFW/glfw3.h>
-#include "tinyfiledialogs.h"
+#include <tinyfiledialogs/tinyfiledialogs.h>
 
 static double now;
 static double last_speed_adjust_time = 0;

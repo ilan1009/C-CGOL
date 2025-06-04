@@ -1,12 +1,10 @@
+// game.h
 #ifndef GAME_H
 #define GAME_H
 
 #include <stdbool.h>
 #include <GLFW/glfw3.h>
 #include "render.h"
-
-
-
 
 #define INITIAL_SPEED 50;
 #define MAX_SPEED 100

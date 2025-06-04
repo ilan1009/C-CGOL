@@ -1,4 +1,4 @@
-// engine.c - Using proper dynamic sets
+// engine.c
 #include "engine.h"
 #include "coordinate.h"
 #include "coordinate_set.h"
@@ -7,7 +7,6 @@
 #include <string.h>
 
 static bool first_step;
-
 
 static int grid_width = 0;
 static int grid_height = 0;
@@ -73,7 +72,7 @@ void kill_cell(Coordinate pos) {
     }
 }
 
-// Optimized neighbor counting
+// neighbor counting
 static inline int count_alive_neighbors(int x, int y) {
     int count = 0;
     CoordinateSetEntry* found;
@@ -91,7 +90,7 @@ static inline int count_alive_neighbors(int x, int y) {
     return count;
 }
 
-// Clear and free a coordinate set
+// clear and free a coordinate set
 static inline void clear_coordinate_set(CoordinateSetEntry** set) {
     CoordinateSetEntry *current, *tmp;
     HASH_ITER(hh, *set, current, tmp) {
@@ -134,7 +133,7 @@ void engine_step(void) {
     if (first_step) {
         first_step = false;
         HASH_ITER(hh, alive_cells, cell, tmp) {
-            // Add cell and its neighbors to changed set
+            // add cell and its neighbors to changed set
             for (int i = 0; i < 9; i++) {
                 Coordinate affected;
                 affected.x = cell->coord.x + DELTA_X[i];
@@ -173,6 +172,7 @@ void engine_step(void) {
     // cleanup
     clear_coordinate_set(&candidates);
     
+    // execution chamber
     HASH_ITER(hh, to_die, cell, tmp) {
         kill_cell(cell->coord);
         
@@ -185,7 +185,7 @@ void engine_step(void) {
             add_to_coordinate_set(&candidates, neighbor);
         }
     }
-    
+    // maternity ward
     HASH_ITER(hh, to_birth, cell, tmp) {
         birth_cell(cell->coord);
         
