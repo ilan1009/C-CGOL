@@ -16,7 +16,7 @@ OBJ := $(patsubst %.c,$(BUILD_DIR)/%.o,$(ALL_SRC))
 
 DEP := $(OBJ:.o=.d)
 
-BIN := $(BUILD_DIR)/my_project
+BIN := $(BUILD_DIR)/CCGOL
 
 SHADERS := $(wildcard $(SRC_DIR)/shaders/*.vert $(SRC_DIR)/shaders/*.frag)
 SHADER_TARGETS := $(patsubst $(SRC_DIR)/shaders/%,$(SHADER_DIR)/%,$(SHADERS))
