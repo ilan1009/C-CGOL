@@ -8,5 +8,6 @@ build/
 !/rles/
 !/include/
 !/libs/
+!README.md
 !Makefile
 !Makefile_win
