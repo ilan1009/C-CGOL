@@ -2,6 +2,8 @@
 
 **CCGOL** is a high-performance simulation of Conway's Game of Life written in C, utilizing OpenGL for rendering with shaders and efficient data structures for large-scale pattern evolution. It supports loading RLE pattern files.
 
+![alt text](https://i.imgur.com/6mMNisa.png)
+
 ## Requirements
 
 * **Compatible C compiler** (tested with gcc on linux, minGW on windows)
