@@ -1,3 +1,4 @@
+// main.c
 #include "main.h"
 #include "engine.h"
 #include "window.h"
@@ -10,8 +11,18 @@
 
 extern CoordinateSetEntry* alive_cells;
 
-int main(void) {
-    printf("program started\n");
+int main(int argc, char *argv[]) {
+    int grid_size = 800, window_size = 800;
+
+    if (argc > 1) {
+        grid_size = atoi(argv[1]);
+        if (argc > 2) {
+            window_size = atoi(argv[2]);
+        }
+    }
+
+    init_window_parameters(window_size, grid_size);
+    
     setbuf(stdout, NULL);
 
     engine_init(GRID_WIDTH, GRID_HEIGHT);
@@ -22,11 +33,11 @@ int main(void) {
     Renderer renderer;
     render_init(&renderer, CELL_SIZE);
 
-    // Query the framebuffer size
+    // query framebuffer size
     int framebuffer_width, framebuffer_height;
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
 
-    // Resize the renderer to match the framebuffer size
+    // resize the renderer to match the framebuffer size
     render_resize(&renderer, framebuffer_width, framebuffer_height);
     printf("Renderer initialised\n");
 
@@ -50,6 +61,7 @@ void init_glfw(GLFWwindow **window) {
         exit(EXIT_FAILURE);
     }
 
+    glfwWindowHint(GLFW_RESIZABLE, 0); // make window non-resizable,,, for now.
     *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "CGOL", NULL, NULL);
     if (!*window) {
         fprintf(stderr, "Failed to create GLFW window\n");

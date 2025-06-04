@@ -1,13 +1,14 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#define GRID_WIDTH 800
-#define GRID_HEIGHT 800
-#define WINDOW_WIDTH 800
+extern int WINDOW_WIDTH;
+extern int WINDOW_HEIGHT;
 
-extern const int CELL_SIZE;
+extern int GRID_WIDTH;
+extern int GRID_HEIGHT;
 
-extern const int WINDOW_HEIGHT;
+extern int CELL_SIZE;
 
+void init_window_parameters(int window_size, int grid_size);
 
 #endif
