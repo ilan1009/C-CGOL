@@ -1,35 +1,38 @@
-# windows makefile for mingw
-CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -Iinclude/glad -O2 -march=native -flto -funroll-loops -MMD -MP
-LDFLAGS = -Llib/lib-mingw-w64 -lglfw3 -lopengl32 -lgdi32 -luser32 -lkernel32 -lole32 -lcomdlg32
+#untested windows makefile for mingw/other windows compilers
+CFLAGS = -Wall -Wextra -std=c23 -O2 -Iinclude -Isrc
+LDFLAGS = -lglfw3 -lgdi32 -lopengl32 -luser32 -lkernel32 -lshell32
 
-# output exe
-BIN = build/my_project.exe
+SRC_DIR := src
+LIBS_DIR := libs
+BUILD_DIR := build_win
+SHADER_DIR := $(BUILD_DIR)/shaders
 
-# src
-SRC := $(wildcard src/*.c) src/glad/glad.c
-OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
+SRC := $(wildcard $(SRC_DIR)/*.c)
+LIBS := $(wildcard $(LIBS_DIR)/glad/*.c) $(wildcard $(LIBS_DIR)/tinyfiledialogs/*.c)
+ALL_SRC := $(SRC) $(LIBS)
+
+OBJ := $(patsubst %.c,$(BUILD_DIR)/%.o,$(ALL_SRC))
+
 DEP := $(OBJ:.o=.d)
 
-# shaders
-SHADER_DIR := build/shaders
-SHADERS := $(wildcard src/shaders/*.vert src/shaders/*.frag)
-SHADER_TARGETS := $(patsubst src/shaders/%,$(SHADER_DIR)/%,$(SHADERS))
+BIN := $(BUILD_DIR)/my_project.exe
+
+SHADERS := $(wildcard $(SRC_DIR)/shaders/*.vert $(SRC_DIR)/shaders/*.frag)
+SHADER_TARGETS := $(patsubst $(SRC_DIR)/shaders/%,$(SHADER_DIR)/%,$(SHADERS))
 
 $(BIN): $(OBJ) $(SHADER_TARGETS)
 	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 
-build/%.o: src/%.c
-	if not exist "$(subst /,\,$(@D))" mkdir $(subst /,\,$(@D))
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# copy shaders to build dir
-$(SHADER_DIR)/%: src/shaders/%
-	if not exist "$(subst /,\,$(@D))" mkdir $(subst /,\,$(@D))
-	copy /Y "$(subst /,\,$<)" "$(subst /,\,$@)"
+$(SHADER_DIR)/%: $(SRC_DIR)/shaders/%
+	@mkdir -p $(@D)
+	cp $< $@
 
 clean:
-	@if exist build rmdir /S /Q build
+	rm -rf $(BUILD_DIR)
 
 -include $(DEP)
 

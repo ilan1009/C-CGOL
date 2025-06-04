@@ -7,5 +7,6 @@ build/
 !/src/
 !/rles/
 !/include/
+!/libs/
 !Makefile
 !Makefile_win
